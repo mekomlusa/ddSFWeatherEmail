@@ -76,3 +76,7 @@ for r in recipients:
     print(response.status_code)
     print(response.body)
     print(response.headers)
+
+# Close the db connection   
+cur.close()
+conn.close()

@@ -22,70 +22,70 @@ except ImportError:
     import urllib2 as urllib
 
 def main():
-    while 1:
-        # weather
-        weather = Weather()
-        
-        # Connect to the database
-        urlparse.uses_netloc.append("postgres")
-        url = urlparse.urlparse(os.environ['DATABASE_URL'])
-        
-        conn = psycopg2.connect(
-            database=url.path[1:],
-            user=url.username,
-            password=url.password,
-            host=url.hostname,
-            port=url.port
-        )
-        
-        cur = conn.cursor()
-        
-        # Get all the users here
-        
-        cur.execute("SELECT * FROM users WHERE push = True;")
+    # weather
+    weather = Weather()
+    
+    # Connect to the database
+    urlparse.uses_netloc.append("postgres")
+    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    
+    conn = psycopg2.connect(
+        database=url.path[1:],
+        user=url.username,
+        password=url.password,
+        host=url.hostname,
+        port=url.port
+    )
+    
+    cur = conn.cursor()
+    
+    # Get all the users here
+    
+    cur.execute("SELECT * FROM users WHERE push = True;")
+    try:
+    # the cat image library should NOT be empty
+        recipients = cur.fetchall()
+    except cur.rowcount == 0:
+        raise "No record found in the user table!"
+    
+    sg = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY'))
+    
+    # Lookup via location name.
+    for r in recipients:
+        location = weather.lookup_by_location(r[1])
+        condition = location.condition()
+        forecasts = location.forecast()
+        l = []
+        for forecast in forecasts[:3]:
+            l.append("Date: "+forecast.date()+"<br>Weather condition: "+forecast.text()+"<br>High: "+
+                     forecast.high()+"C<br>Low: "+forecast.low()+"C<br>")
+        # sendgrid
+        from_email = Email("noreply@mlusareport.com")
+        subject = datetime.datetime.today().strftime("%B %d, %Y")+" "+r[1]+" Weather Report"
+        to_email = Email(r[3])
+        content = Content("text/html","hey")
+        mail = Mail(from_email, subject, to_email, content)
+        mail.personalizations[0].add_substitution(Substitution("-user-", r[0]))
+        mail.personalizations[0].add_substitution(Substitution("-loc-", r[1]))
+        mail.personalizations[0].add_substitution(Substitution("-current_weather-", str(condition.text())+"<br>"))
+        mail.personalizations[0].add_substitution(Substitution("-day1-", str(l[0])))
+        mail.personalizations[0].add_substitution(Substitution("-day2-", str(l[1])))
+        mail.personalizations[0].add_substitution(Substitution("-day3-", str(l[2])))
+        mail.personalizations[0].add_substitution(Substitution("-today-", datetime.datetime.today().strftime("%B %d, %Y")))
+        mail.template_id = "02b2a6ec-926e-4b95-ab7b-70cf93b363ce"
         try:
-        # the cat image library should NOT be empty
-            recipients = cur.fetchall()
-        except cur.rowcount == 0:
-            raise "No record found in the user table!"
-        
-        sg = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY'))
-        
-        # Lookup via location name.
-        for r in recipients:
-            location = weather.lookup_by_location(r[1])
-            condition = location.condition()
-            forecasts = location.forecast()
-            l = []
-            for forecast in forecasts[:3]:
-                l.append("Date: "+forecast.date()+"<br>Weather condition: "+forecast.text()+"<br>High: "+
-                         forecast.high()+"C<br>Low: "+forecast.low()+"C<br>")
-            # sendgrid
-            from_email = Email("noreply@mlusareport.com")
-            subject = datetime.datetime.today().strftime("%B %d, %Y")+" "+r[1]+" Weather Report"
-            to_email = Email(r[3])
-            content = Content("text/html","hey")
-            mail = Mail(from_email, subject, to_email, content)
-            mail.personalizations[0].add_substitution(Substitution("-user-", r[0]))
-            mail.personalizations[0].add_substitution(Substitution("-loc-", r[1]))
-            mail.personalizations[0].add_substitution(Substitution("-current_weather-", str(condition.text())+"<br>"))
-            mail.personalizations[0].add_substitution(Substitution("-day1-", str(l[0])))
-            mail.personalizations[0].add_substitution(Substitution("-day2-", str(l[1])))
-            mail.personalizations[0].add_substitution(Substitution("-day3-", str(l[2])))
-            mail.personalizations[0].add_substitution(Substitution("-today-", datetime.datetime.today().strftime("%B %d, %Y")))
-            mail.template_id = "02b2a6ec-926e-4b95-ab7b-70cf93b363ce"
-            try:
-                response = sg.client.mail.send.post(request_body=mail.get())
-            except urllib.HTTPError as e:
-                print (e.read())
-            print(response.status_code)
-            print(response.body)
-            print(response.headers)
-        
-        # Close the db connection   
-        cur.close()
-        conn.close()
-        time.sleep(0.1)
+            response = sg.client.mail.send.post(request_body=mail.get())
+        except urllib.HTTPError as e:
+            print (e.read())
+        print(response.status_code)
+        print(response.body)
+        print(response.headers)
+    
+    # Close the db connection   
+    cur.close()
+    conn.close()
+    while 1:
+        time.sleep(1000)
 
 if __name__ == '__main__':
     try:

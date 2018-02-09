@@ -72,7 +72,7 @@ def main():
         mail.personalizations[0].add_substitution(Substitution("-day2-", str(l[1])))
         mail.personalizations[0].add_substitution(Substitution("-day3-", str(l[2])))
         mail.personalizations[0].add_substitution(Substitution("-today-", datetime.datetime.today().strftime("%B %d, %Y")))
-        mail.template_id = "02b2a6ec-926e-4b95-ab7b-70cf93b363ce"
+        mail.template_id = "9c758715-9ccf-4c9d-ad74-5ca326600e50"
         try:
             response = sg.client.mail.send.post(request_body=mail.get())
         except urllib.HTTPError as e:

@@ -6,7 +6,8 @@ Created on Tue Feb 06 23:05:00 2018
 """
 
 from weather import Weather
-import datetime
+from datetime import timedelta, datetime, tzinfo
+import pytz
 import sendgrid
 import os
 from sendgrid.helpers.mail import Email, Content, Substitution, Mail
@@ -24,6 +25,10 @@ except ImportError:
 def main():
     # weather
     weather = Weather()
+    
+    # timezone setting
+    timezone = pytz.timezone("America/Chicago")
+    d_aware = timezone.localize(datetime.today())
     
     # Connect to the database
     urlparse.uses_netloc.append("postgres")
@@ -61,7 +66,7 @@ def main():
                      forecast.high()+"C<br>Low: "+forecast.low()+"C<br>")
         # sendgrid
         from_email = Email("noreply@mlusareport.com")
-        subject = datetime.datetime.today().strftime("%B %d, %Y")+" "+r[1]+" Weather Report"
+        subject = d_aware.strftime("%B %d, %Y")+" "+r[1]+" Weather Report"
         to_email = Email(r[3])
         content = Content("text/html","hey")
         mail = Mail(from_email, subject, to_email, content)
@@ -71,7 +76,7 @@ def main():
         mail.personalizations[0].add_substitution(Substitution("-day1-", str(l[0])))
         mail.personalizations[0].add_substitution(Substitution("-day2-", str(l[1])))
         mail.personalizations[0].add_substitution(Substitution("-day3-", str(l[2])))
-        mail.personalizations[0].add_substitution(Substitution("-today-", datetime.datetime.today().strftime("%B %d, %Y")))
+        mail.personalizations[0].add_substitution(Substitution("-today-", d_aware.strftime("%B %d, %Y")))
         mail.template_id = "9c758715-9ccf-4c9d-ad74-5ca326600e50"
         try:
             response = sg.client.mail.send.post(request_body=mail.get())

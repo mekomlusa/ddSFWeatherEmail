@@ -24,13 +24,7 @@ except ImportError:
     # Python 2
     import urllib2 as urllib
 
-
 def main():
-    # scheduler info
-    sched = BlockingScheduler()
-    sched.scheduled_job('cron', day_of_week='mon-sun', hour=9)
-    sched.start()
-
     # weather
     weather = Weather()
     
@@ -99,8 +93,11 @@ def main():
     conn.close()
 
 if __name__ == '__main__':
+    # Scheduler info
+    sched = BlockingScheduler()
+    sched.add_job(main, 'cron', day_of_week='mon-sun', hour=9)
+    
     try:
-        main()
-    except KeyboardInterrupt:
-        print >> sys.stderr, '\nExiting by user request.\n'
-        sys.exit(0)
+        sched.start()
+    except (KeyboardInterrupt, SystemExit):
+        pass

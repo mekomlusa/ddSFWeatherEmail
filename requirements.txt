@@ -2,3 +2,4 @@ weather_api==0.0.5
 psycopg2==2.7.3
 sendgrid==5.2.0
 pytz==2018.3
+APScheduler==3.0.0

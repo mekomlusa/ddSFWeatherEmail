@@ -15,6 +15,8 @@ import psycopg2
 import time
 import urlparse
 import sys
+from apscheduler.schedulers.blocking import BlockingScheduler
+
 try:
     # Python 3
     import urllib.request as urllib
@@ -22,7 +24,13 @@ except ImportError:
     # Python 2
     import urllib2 as urllib
 
+
 def main():
+    # scheduler info
+    sched = BlockingScheduler()
+    @sched.scheduled_job('cron', day_of_week='mon-sun', hour=9)
+    sched.start()
+
     # weather
     weather = Weather()
     

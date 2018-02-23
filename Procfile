@@ -1,1 +1,1 @@
-worker: python weatherEmail.py
+clock: python weatherEmail.py

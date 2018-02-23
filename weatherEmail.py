@@ -89,8 +89,6 @@ def main():
     # Close the db connection   
     cur.close()
     conn.close()
-    while 1:
-        time.sleep(1000)
 
 if __name__ == '__main__':
     try:

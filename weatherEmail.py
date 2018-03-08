@@ -93,11 +93,4 @@ def main():
     conn.close()
 
 if __name__ == '__main__':
-    # Scheduler info
-    sched = BlockingScheduler()
-    sched.add_job(main, 'cron', day_of_week='mon-sun', hour=9)
-    
-    try:
-        sched.start()
-    except (KeyboardInterrupt, SystemExit):
-        pass
+    main()
